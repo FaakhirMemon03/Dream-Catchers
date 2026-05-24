@@ -53,6 +53,9 @@ public class ShapeDrawingSystem : MonoBehaviour
         }
     }
 
+    [Header("Prefabs")]
+    public GameObject bubblePrefab;
+
     void EndDrawing()
     {
         isDrawing = false;
@@ -64,16 +67,28 @@ public class ShapeDrawingSystem : MonoBehaviour
     {
         if (points.Count < 10) return;
 
-        // Simple Circle Detection Logic:
-        // Check if start and end points are close, and if the points are roughly equidistant from a center
         if (IsCircle())
         {
             Debug.Log("Shape Recognized: Circle");
+            SpawnBubble();
             onCircleDrawn?.Invoke();
         }
         else
         {
             Debug.Log("Shape not recognized");
+        }
+    }
+
+    void SpawnBubble()
+    {
+        if (bubblePrefab != null)
+        {
+            // Spawn at the center of the drawn shape
+            Vector2 centroid = Vector2.zero;
+            foreach (var p in points) centroid += p;
+            centroid /= points.Count;
+
+            Instantiate(bubblePrefab, new Vector3(centroid.x, centroid.y, 0), Quaternion.identity);
         }
     }
 
