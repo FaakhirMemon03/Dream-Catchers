@@ -8,7 +8,7 @@ public class PlayerController : MonoBehaviour
     public float rotationSpeed = 720f;
 
     [Header("References")]
-    public DynamicJoystick joystick; 
+    public VirtualJoystick joystick; 
     private Rigidbody2D rb;
     private Animator animator;
 
