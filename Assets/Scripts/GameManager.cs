@@ -37,4 +37,23 @@ public class GameManager : MonoBehaviour
         starsCount++;
         Debug.Log($"Stars: {starsCount}");
     }
+
+    public bool HasEnoughDust(int amount)
+    {
+        return dreamDustCount >= amount;
+    }
+
+    public void SpendDreamDust(int amount)
+    {
+        if (HasEnoughDust(amount))
+        {
+            dreamDustCount -= amount;
+            onDustChanged?.Invoke(dreamDustCount);
+        }
+    }
+
+    public void ChangeScene(string sceneName)
+    {
+        UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName);
+    }
 }

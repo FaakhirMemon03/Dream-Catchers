@@ -12,6 +12,8 @@ public class ShapeDrawingSystem : MonoBehaviour
     [Header("Events")]
     public UnityEvent onCircleDrawn;
     public UnityEvent onZigZagDrawn;
+    public UnityEvent onStarDrawn;
+    public UnityEvent onHeartDrawn;
 
     private List<Vector2> points = new List<Vector2>();
     private bool isDrawing = false;
@@ -74,7 +76,16 @@ public class ShapeDrawingSystem : MonoBehaviour
         {
             Debug.Log("Shape Recognized: ZigZag");
             onZigZagDrawn?.Invoke();
-            // Maybe a different effect for ZigZag?
+        }
+        else if (IsStar())
+        {
+            Debug.Log("Shape Recognized: Star");
+            onStarDrawn?.Invoke();
+        }
+        else if (IsHeart())
+        {
+            Debug.Log("Shape Recognized: Heart");
+            onHeartDrawn?.Invoke();
         }
         else
         {
@@ -123,18 +134,48 @@ public class ShapeDrawingSystem : MonoBehaviour
 
     bool IsZigZag()
     {
-        // Simple heuristic: many direction changes
         int directionChanges = 0;
         for (int i = 2; i < points.Count; i++)
         {
             Vector2 v1 = (points[i-1] - points[i-2]).normalized;
             Vector2 v2 = (points[i] - points[i-1]).normalized;
 
-            if (Vector2.Dot(v1, v2) < 0.5f) // Sharp turn
+            if (Vector2.Dot(v1, v2) < 0.5f)
             {
                 directionChanges++;
             }
         }
-        return directionChanges > 3; // More than 3 sharp turns
+        return directionChanges > 3;
+    }
+
+    bool IsStar()
+    {
+        // Simple star heuristic: 5 sharp turns (points)
+        int sharpTurns = 0;
+        for (int i = 2; i < points.Count; i++)
+        {
+            Vector2 v1 = (points[i - 1] - points[i - 2]).normalized;
+            Vector2 v2 = (points[i] - points[i - 1]).normalized;
+
+            if (Vector2.Dot(v1, v2) < -0.2f) // Very sharp turn
+            {
+                sharpTurns++;
+            }
+        }
+        return sharpTurns >= 4 && sharpTurns <= 6;
+    }
+
+    bool IsHeart()
+    {
+        // Heuristic: starts at bottom, goes up/around, ends near start
+        Vector2 start = points[0];
+        Vector2 end = points[points.Count - 1];
+        if (Vector2.Distance(start, end) > 1.5f) return false;
+
+        // Check if top points are higher than start/end
+        float topY = float.MinValue;
+        foreach (var p in points) if (p.y > topY) topY = p.y;
+
+        return (topY - start.y) > 1.0f;
     }
 }

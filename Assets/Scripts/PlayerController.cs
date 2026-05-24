@@ -63,5 +63,24 @@ public class PlayerController : MonoBehaviour
     public void UseBubbleTrap()
     {
         Debug.Log("Lumi used Bubble Trap!");
+        // Bubble trap is handled via ShapeDrawingSystem spawning a bubble
+    }
+
+    public void UseRainbowBlast()
+    {
+        Debug.Log("Lumi used Rainbow Blast! *Sparkle*");
+        // Implementation for Rainbow Blast (e.g., area effect)
+    }
+
+    public void UseMusicPulse()
+    {
+        Debug.Log("Lumi used Music Pulse! *Lullaby*");
+        // Implementation for Music Pulse (e.g., slow down enemies)
+    }
+
+    public void UseDreamShield()
+    {
+        Debug.Log("Lumi used Dream Shield! *Glow*");
+        // Implementation for Dream Shield (e.g., temporary invincibility)
     }
 }
