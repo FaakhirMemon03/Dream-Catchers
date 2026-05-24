@@ -49,7 +49,7 @@ public class PlayerController : MonoBehaviour
 
     void Move()
     {
-        rb.velocity = moveInput * moveSpeed;
+        rb.linearVelocity = moveInput * moveSpeed;
 
         if (moveInput.magnitude > 0.1f)
         {

@@ -37,16 +37,16 @@ public class AlarmoAI : MonoBehaviour, IMonster
     {
         if (isCaptured)
         {
-            rb.velocity = Vector2.zero;
+            rb.linearVelocity = Vector2.zero;
             return;
         }
 
         Vector2 direction = (targetPosition - (Vector2)transform.position).normalized;
-        rb.velocity = direction * moveSpeed;
+        rb.linearVelocity = direction * moveSpeed;
 
         if (Vector2.Distance(transform.position, targetPosition) < 0.2f)
         {
-            rb.velocity = Vector2.zero;
+            rb.linearVelocity = Vector2.zero;
         }
     }
 
