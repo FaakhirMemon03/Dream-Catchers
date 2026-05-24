@@ -25,7 +25,10 @@ public class VirtualJoystick : MonoBehaviour, IDragHandler, IPointerUpHandler, I
     {
         Vector2 position = RectTransformUtility.WorldToScreenPoint(null, background.position);
         Vector2 radius = background.sizeDelta / 2;
-        input = (eventData.position - position) / (radius * canvas.scaleFactor);
+        if (canvas == null) canvas = GetComponentInParent<Canvas>();
+        float scale = canvas != null ? canvas.scaleFactor : 1f;
+
+        input = (eventData.position - position) / (radius * scale);
         
         if (input.magnitude > 1)
             input = input.normalized;
