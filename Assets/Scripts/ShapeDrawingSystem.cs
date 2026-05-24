@@ -4,21 +4,21 @@ using UnityEngine.Events;
 
 public class ShapeDrawingSystem : MonoBehaviour
 {
+    [Header("Drawing Settings")]
     public LineRenderer lineRenderer;
     public float minDistance = 0.1f;
-    public float recognitionThreshold = 0.8f;
+    public GameObject bubblePrefab;
+
+    [Header("Events")]
+    public UnityEvent onCircleDrawn;
+    public UnityEvent onZigZagDrawn;
 
     private List<Vector2> points = new List<Vector2>();
     private bool isDrawing = false;
 
-    [Header("Events")]
-    public UnityEvent onCircleDrawn;
-    public UnityEvent onStarDrawn;
-    public UnityEvent onZigZagDrawn;
-    public UnityEvent onHeartDrawn;
-
     void Update()
     {
+        // Support both Mouse and Mobile Touch
         if (Input.GetMouseButtonDown(0))
         {
             StartDrawing();
@@ -53,9 +53,6 @@ public class ShapeDrawingSystem : MonoBehaviour
         }
     }
 
-    [Header("Prefabs")]
-    public GameObject bubblePrefab;
-
     void EndDrawing()
     {
         isDrawing = false;
@@ -73,6 +70,12 @@ public class ShapeDrawingSystem : MonoBehaviour
             SpawnBubble();
             onCircleDrawn?.Invoke();
         }
+        else if (IsZigZag())
+        {
+            Debug.Log("Shape Recognized: ZigZag");
+            onZigZagDrawn?.Invoke();
+            // Maybe a different effect for ZigZag?
+        }
         else
         {
             Debug.Log("Shape not recognized");
@@ -83,13 +86,16 @@ public class ShapeDrawingSystem : MonoBehaviour
     {
         if (bubblePrefab != null)
         {
-            // Spawn at the center of the drawn shape
-            Vector2 centroid = Vector2.zero;
-            foreach (var p in points) centroid += p;
-            centroid /= points.Count;
-
+            Vector2 centroid = GetCentroid();
             Instantiate(bubblePrefab, new Vector3(centroid.x, centroid.y, 0), Quaternion.identity);
         }
+    }
+
+    Vector2 GetCentroid()
+    {
+        Vector2 centroid = Vector2.zero;
+        foreach (var p in points) centroid += p;
+        return centroid / points.Count;
     }
 
     bool IsCircle()
@@ -97,20 +103,13 @@ public class ShapeDrawingSystem : MonoBehaviour
         Vector2 start = points[0];
         Vector2 end = points[points.Count - 1];
 
-        // Start and end must be close
         if (Vector2.Distance(start, end) > 2.0f) return false;
 
-        // Calculate centroid
-        Vector2 centroid = Vector2.zero;
-        foreach (var p in points) centroid += p;
-        centroid /= points.Count;
-
-        // Calculate average radius
+        Vector2 centroid = GetCentroid();
         float avgRadius = 0;
         foreach (var p in points) avgRadius += Vector2.Distance(p, centroid);
         avgRadius /= points.Count;
 
-        // Check variance in radius
         float variance = 0;
         foreach (var p in points)
         {
@@ -119,6 +118,23 @@ public class ShapeDrawingSystem : MonoBehaviour
         }
         variance /= points.Count;
 
-        return (variance / avgRadius) < 0.2f; // Tight threshold for circle
+        return (variance / avgRadius) < 0.25f; 
+    }
+
+    bool IsZigZag()
+    {
+        // Simple heuristic: many direction changes
+        int directionChanges = 0;
+        for (int i = 2; i < points.Count; i++)
+        {
+            Vector2 v1 = (points[i-1] - points[i-2]).normalized;
+            Vector2 v2 = (points[i] - points[i-1]).normalized;
+
+            if (Vector2.Dot(v1, v2) < 0.5f) // Sharp turn
+            {
+                directionChanges++;
+            }
+        }
+        return directionChanges > 3; // More than 3 sharp turns
     }
 }

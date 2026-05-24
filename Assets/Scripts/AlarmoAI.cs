@@ -1,19 +1,24 @@
 using UnityEngine;
-using UnityEngine.AI;
 
+[RequireComponent(typeof(Rigidbody2D))]
 public class AlarmoAI : MonoBehaviour, IMonster
 {
-    public float wanderRadius = 10f;
-    public float wanderTimer = 5f;
+    public float moveSpeed = 2f;
+    public float wanderRadius = 5f;
+    public float changeTargetInterval = 3f;
 
-    private NavMeshAgent agent;
+    private Rigidbody2D rb;
+    private Vector2 startPosition;
+    private Vector2 targetPosition;
     private float timer;
     private bool isCaptured = false;
 
-    void OnEnable()
+    void Start()
     {
-        agent = GetComponent<NavMeshAgent>();
-        timer = wanderTimer;
+        rb = GetComponent<Rigidbody2D>();
+        rb.gravityScale = 0f;
+        startPosition = transform.position;
+        SetNewTarget();
     }
 
     void Update()
@@ -21,36 +26,44 @@ public class AlarmoAI : MonoBehaviour, IMonster
         if (isCaptured) return;
 
         timer += Time.deltaTime;
-
-        if (timer >= wanderTimer)
+        if (timer >= changeTargetInterval)
         {
-            Vector3 newPos = RandomNavSphere(transform.position, wanderRadius, -1);
-            agent.SetDestination(newPos);
+            SetNewTarget();
             timer = 0;
         }
     }
 
-    public static Vector3 RandomNavSphere(Vector3 origin, float dist, int layermask)
+    void FixedUpdate()
     {
-        Vector3 randDirection = Random.insideUnitSphere * dist;
-        randDirection += origin;
-        NavMeshHit navHit;
-        NavMesh.SamplePosition(randDirection, out navHit, dist, layermask);
-        return navHit.position;
+        if (isCaptured)
+        {
+            rb.velocity = Vector2.zero;
+            return;
+        }
+
+        Vector2 direction = (targetPosition - (Vector2)transform.position).normalized;
+        rb.velocity = direction * moveSpeed;
+
+        if (Vector2.Distance(transform.position, targetPosition) < 0.2f)
+        {
+            rb.velocity = Vector2.zero;
+        }
+    }
+
+    void SetNewTarget()
+    {
+        targetPosition = startPosition + Random.insideUnitCircle * wanderRadius;
     }
 
     public void OnCaptured()
     {
         isCaptured = true;
-        agent.isStopped = true;
         
-        // Play funny capture animation/effect
         Debug.Log("Alarmo: Oh no! I'm trapped in a bubble! *Ring Ring*");
         
-        // Trigger rewards
         GameManager.Instance?.AddDreamDust(10);
         
-        // Shrivel or disappear
+        // Shrvel effect or animation would go here
         Destroy(gameObject, 1f);
     }
 }

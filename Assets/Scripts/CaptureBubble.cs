@@ -20,7 +20,7 @@ public class CaptureBubble : MonoBehaviour
         }
     }
 
-    private void OnTriggerEnter(Collider other)
+    private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("Monster"))
         {
@@ -32,9 +32,4 @@ public class CaptureBubble : MonoBehaviour
             }
         }
     }
-}
-
-public interface IMonster
-{
-    void OnCaptured();
 }

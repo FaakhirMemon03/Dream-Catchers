@@ -1,64 +1,67 @@
 using UnityEngine;
 
+[RequireComponent(typeof(Rigidbody2D))]
 public class PlayerController : MonoBehaviour
 {
     [Header("Movement Settings")]
     public float moveSpeed = 5f;
-    public float rotationSpeed = 10f;
+    public float rotationSpeed = 720f;
 
     [Header("References")]
-    public DynamicJoystick joystick; // Assuming using Joystick Pack for mobile
-    private CharacterController controller;
+    public DynamicJoystick joystick; 
+    private Rigidbody2D rb;
     private Animator animator;
 
-    private Vector3 moveDirection;
+    private Vector2 moveInput;
 
     void Start()
     {
-        controller = GetComponent<CharacterController>();
+        rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
+        
+        // Ensure gravity doesn't affect the player in a top-down view
+        rb.gravityScale = 0f;
     }
 
     void Update()
     {
-        HandleMovement();
+        HandleInput();
     }
 
-    void HandleMovement()
+    void FixedUpdate()
     {
-        float horizontal = joystick != null ? joystick.Horizontal : Input.GetAxis("Horizontal");
-        float vertical = joystick != null ? joystick.Vertical : Input.GetAxis("Vertical");
+        Move();
+    }
 
-        moveDirection = new Vector3(horizontal, 0, vertical).normalized;
+    void HandleInput()
+    {
+        float horizontal = joystick != null ? joystick.Horizontal : Input.GetAxisRaw("Horizontal");
+        float vertical = joystick != null ? joystick.Vertical : Input.GetAxisRaw("Vertical");
 
-        if (moveDirection.magnitude >= 0.1f)
+        moveInput = new Vector2(horizontal, vertical);
+        
+        if (moveInput.magnitude > 1f)
+            moveInput.Normalize();
+
+        if (animator != null)
+            animator.SetBool("isRunning", moveInput.magnitude > 0.1f);
+    }
+
+    void Move()
+    {
+        rb.velocity = moveInput * moveSpeed;
+
+        if (moveInput.magnitude > 0.1f)
         {
-            // Rotate towards movement direction
-            Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
-
-            // Move
-            controller.Move(moveDirection * moveSpeed * Time.deltaTime);
-            
-            if (animator != null)
-                animator.SetBool("isRunning", true);
-        }
-        else
-        {
-            if (animator != null)
-                animator.SetBool("isRunning", false);
+            // Rotate towards movement direction in 2D
+            float targetAngle = Mathf.Atan2(moveInput.y, moveInput.x) * Mathf.Rad2Deg - 90f;
+            Quaternion targetRotation = Quaternion.Euler(0, 0, targetAngle);
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime);
         }
     }
 
-    // Power Trigger Methods
     public void UseBubbleTrap()
     {
         Debug.Log("Lumi used Bubble Trap!");
-        // Instantiate bubble trap logic here
-    }
-
-    public void UseRainbowBlast()
-    {
-        Debug.Log("Lumi used Rainbow Blast!");
     }
 }
